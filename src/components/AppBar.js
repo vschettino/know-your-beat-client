@@ -16,7 +16,11 @@ export default class AppAppBar extends React.Component {
   render() {
     return (
       <div>
-        <DrawerMenu open={this.state.open} handleRequestChange={this.handleRequestChange} />
+        <DrawerMenu
+          open={this.state.open}
+          handleRequestChange={this.handleRequestChange}
+          handleClose={this.handleClose}
+           />
         <AppBar
           title={"KnowYourBeat"}
           iconClassNameRight="muidocs-icon-navigation-expand-more"

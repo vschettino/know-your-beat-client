@@ -5,7 +5,7 @@ import FlatButton from 'material-ui/FlatButton';
 const Home = () => (
   <Card>
       <CardHeader
-        title="Welcome to KnowYourBeat"
+        title="Artists"
         subtitle="Introduction"
       />
       <CardText>
