@@ -30,7 +30,6 @@ export default class Home extends React.Component{
   render = () => {
     const cookies = new Cookies();
     if(cookies.get('access_token') != null){
-      console.log(cookies.get('access_token'))
       return <Profile match={{params:{}}}/>
     }
     return <Card>

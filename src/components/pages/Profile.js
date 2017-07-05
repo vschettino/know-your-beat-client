@@ -1,19 +1,8 @@
 import React from 'react';
-import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
+import {Card, CardHeader, CardText} from 'material-ui/Card';
 import config from 'react-global-configuration';
 import Cookies from 'universal-cookie';
 import axios from 'axios';
-
-import Avatar from 'material-ui/Avatar';
-import FontIcon from 'material-ui/FontIcon';
-
-import {
-  blue300,
-  indigo900,
-} from 'material-ui/styles/colors';
-
-const style = {margin: 5};
 
 export default class Profile extends React.Component{
 
@@ -34,7 +23,7 @@ export default class Profile extends React.Component{
     }};
     const cookies = new Cookies();
     if(match.params.access_token !== undefined){
-      cookies.set('access_token', match.params.access_token);
+      cookies.set('access_token', match.params.access_token,{ path: '/' });
     }
     this.getProfile(cookies.get('access_token'));
    }

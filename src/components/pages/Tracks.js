@@ -1,67 +1,124 @@
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableHeader,
-  TableHeaderColumn,
-  TableRow,
-  TableRowColumn,
-} from 'material-ui/Table';
-import Paper from 'material-ui/Paper';
+import DataTables from 'material-ui-datatables';
+import config from 'react-global-configuration';
+import Cookies from 'universal-cookie';
+import axios from 'axios';
+import StatsBoard from '../StatsBoard';
+import AudioFeatures from '../AudioFeatures';
 
-const style = {
-  height: 80,
-  width: 220,
-  margin: 20,
-  padding: 10,
-  textAlign: 'center',
-  display: 'inline-block',
-};
+const TABLE_COLUMNS = [
+  {
+    key: 'name',
+    label: 'Name',
+  }, {
+    key: 'popularity',
+    label: 'Popularity',
+  },{
+    key: 'artist',
+    label: 'Artist',
+  },
+  {
+    key: 'duration_ms',
+    label: 'Duration',
+  },
+];
 
-const Tracks = () => (
-  <div>
-  <Paper style={style} zDepth={2} rounded={false}>Danceabilty<br/><strong>42%</strong></Paper>
-  <Paper style={style} zDepth={2} rounded={false}>Instrumentalness<br/><strong>62%</strong></Paper>
-  <Paper style={style} zDepth={2} rounded={false}>Popularity<br/><strong>21%</strong></Paper>
-  <Paper style={style} zDepth={2} rounded={false}>Energy<br/><strong>11%</strong></Paper>
-  <Paper style={style} zDepth={2} rounded={false}>Positiveness<br/><strong>0%</strong></Paper>
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHeaderColumn>ID</TableHeaderColumn>
-          <TableHeaderColumn>Name</TableHeaderColumn>
-          <TableHeaderColumn>Status</TableHeaderColumn>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <TableRow>
-          <TableRowColumn>1</TableRowColumn>
-          <TableRowColumn>John Smith</TableRowColumn>
-          <TableRowColumn>Employed</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>2</TableRowColumn>
-          <TableRowColumn>Randal White</TableRowColumn>
-          <TableRowColumn>Unemployed</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>3</TableRowColumn>
-          <TableRowColumn>Stephanie Sanders</TableRowColumn>
-          <TableRowColumn>Employed</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>4</TableRowColumn>
-          <TableRowColumn>Steve Brown</TableRowColumn>
-          <TableRowColumn>Employed</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>5</TableRowColumn>
-          <TableRowColumn>Christopher Nolan</TableRowColumn>
-          <TableRowColumn>Unemployed</TableRowColumn>
-        </TableRow>
-      </TableBody>
-    </Table>
-  </div>
-)
 
-export default Tracks
+export default class Tracks extends  React.Component{
+
+  cookies = new Cookies();
+
+  constructor({match}){
+    super();
+    this.state = {audio_features: null, tracks: [], modalOpen: false, stats:{
+      danceability:0,
+      energy:0,
+      instrumentalness:0,
+      valence:0,
+      popularity:0,
+    }}
+  }
+
+  componentDidMount(){
+    this.getTracks(this.cookies.get('access_token'));
+    this.getStats(this.cookies.get('access_token'));
+    //cookies.remove('access_token');
+  }
+  handleModalChange(){
+    this.setState({modalOpen: !this.state.modalOpen})
+  }
+
+  handleCellClick(rowIndex, columnIndex, row, column){
+    console.log('clicked', row.id)
+    this.getAudioFeatures(this.cookies.get('access_token'), row.id)
+    this.setState({modalOpen: true})
+  }
+
+  getTracks(token){
+    axios.get(config.get('api_base_url')+'tracks',{
+         headers: {'Authorization': 'Bearer '+token},
+    })
+    .then(function (response) {
+        const tracks = response.data.items.map(function(item){
+          item.track['artist'] = item.track.artists[0].name
+          item.track.duration_ms = millisToMinutesAndSeconds(item.track.duration_ms);
+          return item.track;
+        })
+        this.setState({tracks});
+    }.bind(this))
+    .catch(function (error) {
+      console.log(error);
+    });
+  }
+
+  getStats(token){
+    axios.get(config.get('api_base_url')+'tracks/stats',{
+         headers: {'Authorization': 'Bearer '+token},
+    })
+    .then(function (response) {
+        this.setState({stats: response.data});
+    }.bind(this))
+    .catch(function (error) {
+      console.log(error);
+    });
+  }
+
+  getAudioFeatures(token, id){
+    axios.get(config.get('api_base_url')+'tracks/'+id,{
+         headers: {'Authorization': 'Bearer '+token},
+    })
+    .then(function (response) {
+        console.log(response);
+        this.setState({audio_features: response.data.audio_features});
+    }.bind(this))
+    .catch(function (error) {
+      console.log(error);
+    });
+  }
+
+  render = () => (
+    <div>
+    <StatsBoard stats={this.state.stats} />
+    <DataTables
+          height={'auto'}
+          selectable={false}
+          showRowHover={true}
+          columns={TABLE_COLUMNS}
+          data={this.state.tracks}
+          showCheckboxes={false}
+          onCellClick={this.handleCellClick.bind(this)}
+          page={1}
+          rowSize={10}
+          count={20}
+          />
+          <AudioFeatures handleClose={this.handleModalChange.bind(this)} open={this.state.modalOpen} features={this.state.audio_features} />
+    </div>
+  )
+
+}
+
+function millisToMinutesAndSeconds(millis) {
+  var minutes = Math.floor(millis / 60000);
+  var seconds = ((millis % 60000) / 1000).toFixed(0);
+  return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+}
