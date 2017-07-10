@@ -2,13 +2,8 @@
 import React from 'react';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
-import DataTables from 'material-ui-datatables';
 
 export default class StatsBoard extends  React.Component{
-
-  constructor(props){
-    super(props);
-  }
 
   render = () => {
     var arr = [];
@@ -20,9 +15,9 @@ export default class StatsBoard extends  React.Component{
     }
 
     return <Dialog
-      title="Dialog With Actions"
+      title={this.props.title+" - Audio Features"}
       actions={<FlatButton
-        label="Submit"
+        label="Close"
         primary={true}
         keyboardFocused={true}
         onTouchTap={this.props.handleClose}

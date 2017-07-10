@@ -1,33 +1,77 @@
 import React from 'react';
-import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
+import DataTables from 'material-ui-datatables';
+import config from 'react-global-configuration';
+import Cookies from 'universal-cookie';
+import axios from 'axios';
 
-const Home = () => (
-  <Card>
-      <CardHeader
-        title="Recommendations"
-        subtitle="Introduction"
-      />
-      <CardText>
-        <p>
-          This is a simple app to help you understand your musical taste. For all features it is required that you sign in with your Spotify account.
-        </p>
-        <p>
-          <strong>We do not save your data on our servers</strong>.
-        </p>
-        <p>
-          All data, besides the permissions you grant us to access your account, stay on your browser and is not stored somewhere else when you go away.
-        </p>
-      </CardText>
-      <CardActions>
-        <FlatButton
-          backgroundColor="#a4c639"
-          hoverColor="#8AA62F"
-          label={'Sign In'}
-          labelPosition="before"
+const TABLE_COLUMNS = [
+  {
+    key: 'name',
+    label: 'Name',
+  }, {
+    key: 'popularity',
+    label: 'Popularity',
+  },{
+    key: 'artist',
+    label: 'Artist',
+  },
+  {
+    key: 'duration_ms',
+    label: 'Duration',
+  },
+];
+
+
+export default class Recommendations extends  React.Component{
+
+  cookies = new Cookies();
+
+  constructor({match}){
+    super();
+    this.state = {tracks: []}
+}
+  componentDidMount(){
+    this.getTracks(this.cookies.get('access_token'));
+  }
+
+  getTracks(token){
+    axios.get(config.get('api_base_url')+'recommendations',{
+         headers: {'Authorization': 'Bearer '+token},
+    })
+    .then(function (response) {
+        console.log(response.data);
+        const tracks = response.data.map(function(item){
+          item['artist'] = item.artists[0].name
+          item.duration_ms = millisToMinutesAndSeconds(item.duration_ms);
+          return item;
+        })
+        this.setState({tracks});
+    }.bind(this))
+    .catch(function (error) {
+      console.log(error);
+    });
+  }
+
+  render = () => (
+
+    <DataTables
+          height={'auto'}
+          selectable={false}
+          showRowHover={true}
+          columns={TABLE_COLUMNS}
+          data={this.state.tracks}
+          showCheckboxes={false}
+          page={1}
+          rowSize={10}
+          count={20}
           />
-      </CardActions>
-    </Card>
-)
+  )
 
-export default Home
+}
+
+
+function millisToMinutesAndSeconds(millis) {
+  var minutes = Math.floor(millis / 60000);
+  var seconds = ((millis % 60000) / 1000).toFixed(0);
+  return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+}

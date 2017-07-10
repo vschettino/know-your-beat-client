@@ -30,7 +30,7 @@ export default class Tracks extends  React.Component{
 
   constructor({match}){
     super();
-    this.state = {audio_features: null, tracks: [], modalOpen: false, stats:{
+    this.state = {title: "Loading", audio_features: null, tracks: [], modalOpen: false, stats:{
       danceability:0,
       energy:0,
       instrumentalness:0,
@@ -49,9 +49,8 @@ export default class Tracks extends  React.Component{
   }
 
   handleCellClick(rowIndex, columnIndex, row, column){
-    console.log('clicked', row.id)
     this.getAudioFeatures(this.cookies.get('access_token'), row.id)
-    this.setState({modalOpen: true})
+    this.setState({modalOpen: true, title: row.name})
   }
 
   getTracks(token){
@@ -111,7 +110,7 @@ export default class Tracks extends  React.Component{
           rowSize={10}
           count={20}
           />
-          <AudioFeatures handleClose={this.handleModalChange.bind(this)} open={this.state.modalOpen} features={this.state.audio_features} />
+          <AudioFeatures title={this.state.title} handleClose={this.handleModalChange.bind(this)} open={this.state.modalOpen} features={this.state.audio_features} />
     </div>
   )
 
